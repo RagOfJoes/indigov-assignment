@@ -1,0 +1,36 @@
+services:
+  mysql:
+    container_name: "mysql"
+    image: mysql:5.7
+    platform: linux/x86_64
+    env_file: ./.env
+    environment:
+      - MYSQL_DATABASE=$DB_NAME
+      - MYSQL_ROOT_PASSWORD=$DB_PASSWORD
+      - MYSQL_TCP_PORT=$DB_PORT
+    ports:
+      - $DB_PORT:$DB_PORT
+    volumes:
+      - db:/var/lib/mysql
+    # TODO: Add volumes so that the data persists
+  app:
+    container_name: "app"
+    env_file: ./.env
+    restart: always
+    working_dir: /app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    depends_on:
+      - mysql
+    environment:
+      # Necessary since there seems to be issues with tsx watching files in a docker container context
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - $SERVER_PORT:$SERVER_PORT
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules/
+volumes:
+  db:
+  node_modules:
